@@ -5,6 +5,7 @@ var port = process.env.PORT || 3000;
 //var port = 3000;
 
 http.lastID = 0;
+var names = {};
 
 //load index.html as homepage
 app.get('/', (req, res) => {
@@ -21,15 +22,23 @@ io.on('connection', (socket) => {
         }
         socket.emit('allplayers', getAllPlayers()); //send a list of all players to one specific socket, the one who triggered this event
         socket.emit('yourID',socket.player.id); //send the players id back to them
-        socket.broadcast.emit('newplayer', socket.player); //broadcast new player to everyone except the player that triggered it
         
-        socket.on('name set', (aname) => {
-            socket.player.name = aname;
+        socket.on('name set', (aname) => { //when they set their name
+            if (names.includes(aname)) {
+                socket.emit('nameagain','');
+            } else {
+                socket.player.name = aname;
+                socket.broadcast.emit('newplayer', socket.player); //broadcast new player to everyone except the player that triggered it
+            }
         });
 
         socket.on('disconnect', function () {
+            var index = names.indexOf(socket.player.name);
+            if (index > -1) {
+                names.splice(index, 1);
+            }
             io.emit('remove', socket.player.name); //sends a message to all connected clients
-            console.log('user disconnected');
+            console.log(socket.player.name+" "+"disconnected");
         });
     //});
 });
