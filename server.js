@@ -24,7 +24,7 @@ io.on('connection', (socket) => {
         socket.emit('yourID',socket.player.id); //send the players id back to them
         
         socket.on('name set', (aname) => { //when they set their name
-            if (names.includes(aname)) {
+            if (names.contains(aname)) {
                 socket.emit('nameagain','');
             } else {
                 socket.player.name = aname;
