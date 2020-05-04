@@ -2,6 +2,7 @@ var app = require('express')();
 var http = require('http').createServer(app); //supply express to an http server
 var io = require('socket.io')(http);
 var port = process.env.PORT || 3000;
+//var port = 3000;
 
 http.lastID = 0;
 
@@ -16,12 +17,18 @@ io.on('connection', (socket) => {
         console.log('a user connected');
         socket.player = { //create a record of the new user and their attributes
             id: http.lastID++,
+            name: ''
         }
         socket.emit('allplayers', getAllPlayers()); //send a list of all players to one specific socket, the one who triggered this event
         socket.emit('yourID',socket.player.id); //send the players id back to them
         socket.broadcast.emit('newplayer', socket.player); //broadcast new player to everyone except the player that triggered it
+        
+        socket.on('name set', (aname) => {
+            socket.player.name = aname;
+        });
+
         socket.on('disconnect', function () {
-            io.emit('remove', socket.player.id); //sends a message to all connected clients
+            io.emit('remove', socket.player.name); //sends a message to all connected clients
             console.log('user disconnected');
         });
     //});
