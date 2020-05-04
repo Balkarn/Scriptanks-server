@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Socket.IO chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font: 13px Helvetica, Arial;
+        }
+
+        form {
+            background: #000;
+            padding: 3px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        form input {
+            border: 0;
+            padding: 10px;
+            width: 90%;
+            margin-right: 0.5%;
+        }
+
+        form button {
+            width: 9%;
+            background: rgb(130, 224, 255);
+            border: none;
+            padding: 10px;
+        }
+
+        #messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #messages li {
+            padding: 5px 10px;
+        }
+
+        #messages li:nth-child(odd) {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <ul id="messages"></ul>
+    <form action="">
+        <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script>
+
+    var Client = {};
+    var socket = io();
+    
+    Client.ID = 0;
+    /*
+    Client.askNewPlayer = function () {
+        console.log("eaewgeaw");
+        Client.socket.emit('newplayer');
+    };
+    
+    Client.askNewPlayer();
+    */
+    socket.on('allplayers', function (data) {
+        console.log(data);
+    });
+
+    socket.on('newplayer', function (data) {
+        $('#messages').append($('<li>').text("guest " + data.id + " has ENTERED the chat"));
+    });
+
+    socket.on('remove', function (id) {
+        $('#messages').append($('<li>').text("guest " + id + " has LEFT the chat"));
+    });
+
+    socket.on('yourID', function (id) {
+        Client.ID = id;
+    });
+
+    $(function () {
+        $('form').submit(function (e) {
+            e.preventDefault(); // prevents page reloading
+            socket.emit('chat message', Client.ID + ": " + $('#m').val()); //emit chat message to server
+            $('#m').val('');
+            return false;
+        });
+        socket.on('chat message', function (msg) { //print out a message when its recieved
+            $('#messages').append($('<li>').text(msg));
+        });
+    });
+
+
+
+
+    </script>
+</body>
+
+</html>
