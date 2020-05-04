@@ -1,6 +1,7 @@
 var app = require('express')();
 var http = require('http').createServer(app); //supply express to an http server
 var io = require('socket.io')(http);
+var port = process.env.PORT || 3000;
 
 http.lastID = 0;
 
@@ -43,6 +44,6 @@ io.on('connection', (socket) => {
     });
 });
 
-http.listen(3000, () => { //listen on port 3000
-    console.log('listening on *:3000');
+http.listen(port, () => { //listen on port 3000
+    console.log('listening on *:port');
 });
