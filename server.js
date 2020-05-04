@@ -5,7 +5,7 @@ var port = process.env.PORT || 3000;
 //var port = 3000;
 
 http.lastID = 0;
-var names = {};
+var names = [];
 
 //load index.html as homepage
 app.get('/', (req, res) => {
