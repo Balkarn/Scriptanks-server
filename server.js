@@ -27,6 +27,7 @@ io.on('connection', (socket) => {
             if (names.indexOf(aname)>-1) {
                 socket.emit('nameagain','');
             } else {
+                names.push(aname);
                 socket.player.name = aname;
                 socket.broadcast.emit('newplayer', socket.player); //broadcast new player to everyone except the player that triggered it
             }
