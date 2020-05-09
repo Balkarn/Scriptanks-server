@@ -33,6 +33,11 @@ io.on('connection', (socket) => {
             }
         });
 
+        socket.on('chat message', (msg) => {
+            console.log('message: ' + msg);
+            io.emit('chat message', msg); //emit the chat message event to everyone
+        });
+
         socket.on('disconnect', function () {
             var index = names.indexOf(socket.player.name);
             if (index > -1) {
@@ -52,14 +57,6 @@ function getAllPlayers() { //get all players
     });
     return players;
 }
-
-//print out chat message event
-io.on('connection', (socket) => {
-    socket.on('chat message', (msg) => {
-        console.log('message: ' + msg);
-        io.emit('chat message', msg); //emit the chat message event to everyone
-    });
-});
 
 http.listen(port, () => { //listen on port 3000
     console.log('listening on *:port');
