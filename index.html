@@ -66,6 +66,7 @@
     var socket = io();
     
     Client.ID = 0;
+    Client.lobby = -1;
     Client.name = prompt("Please enter your name", "Jeff (xD)");
     socket.emit('name set',Client.name); //send the name to the server
     /*
@@ -82,16 +83,21 @@
         socket.emit('name set', Client.name); //send the name to the server
     });
 
+    socket.on('yourlobby', function (data) { //record your lobby
+        Client.lobby = data;
+        $('#messages').append($('<li>').text("Welcome to lobby-"+data));
+    });
+    
     socket.on('allplayers', function (data) { //skeleton function
         console.log(data);
     });
 
     socket.on('newplayer', function (data) {
-        $('#messages').append($('<li>').text(data.name + " has ENTERED the chat"));
+        $('#messages').append($('<li>').text(data.name + " has ENTERED the lobby"));
     });
 
     socket.on('remove', function (id) {
-        $('#messages').append($('<li>').text(id + " has LEFT the chat"));
+        $('#messages').append($('<li>').text(id + " has LEFT the lobby"));
     });
 
     socket.on('yourID', function (id) {

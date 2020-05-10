@@ -5,7 +5,25 @@ var port = process.env.PORT || 3000;
 //var port = 3000;
 
 http.lastID = 0;
-var names = [];
+var names = []; //list of all names connected
+var lobbies = []; //list of all lobbies playernumbers
+
+
+function findLobby() {
+    lobbyToJoin = -1;
+    for (var i = 0; i < lobbies.length; i++) { //loop through all lobbies for lowest number with 1 space
+        if (lobbies[i] == 1) {
+            return i;
+        }
+    }
+    for (var i = 0; i < lobbies.length; i++) { //loop through all lobbies for lowest number with 0 space
+        if (lobbies[i] == 0) {
+            return i;
+        }
+    }
+    lobbies.push(0); //create a new lobby
+    return lobbies.length - 1
+}
 
 //load index.html as homepage
 app.get('/', (req, res) => {
@@ -18,7 +36,8 @@ io.on('connection', (socket) => {
         console.log('a user connected');
         socket.player = { //create a record of the new user and their attributes
             id: http.lastID++,
-            name: ''
+            name: '',
+            lobbynumber: -1
         }
         socket.emit('allplayers', getAllPlayers()); //send a list of all players to one specific socket, the one who triggered this event
         socket.emit('yourID',socket.player.id); //send the players id back to them
@@ -29,21 +48,28 @@ io.on('connection', (socket) => {
             } else {
                 names.push(aname);
                 socket.player.name = aname;
-                socket.broadcast.emit('newplayer', socket.player); //broadcast new player to everyone except the player that triggered it
+                var lobbyid = findLobby();
+                lobbies[lobbyid]++;
+                socket.player.lobbynumber = lobbyid;
+                socket.join("room"+lobbyid);
+                socket.emit('yourlobby',lobbyid);
+                console.log("joined lobby"+lobbyid);
+                io.in("room" + socket.player.lobbynumber).emit('newplayer', socket.player); //tell everyone in lobby that the player joined the lobby
             }
         });
 
         socket.on('chat message', (msg) => {
             console.log('message: ' + msg);
-            io.emit('chat message', msg); //emit the chat message event to everyone
+            io.in("room" + socket.player.lobbynumber).emit('chat message', msg); //emit the chat message event to everyone
         });
 
         socket.on('disconnect', function () {
             var index = names.indexOf(socket.player.name);
             if (index > -1) {
                 names.splice(index, 1);
-            }
-            io.emit('remove', socket.player.name); //sends a message to all connected clients
+                lobbies[socket.player.lobbynumber]--
+            }   
+            io.in("room" + socket.player.lobbynumber).emit('remove', socket.player.name); //tell everyone in lobby that the player left the lobby
             console.log(socket.player.name+" "+"disconnected");
         });
     //});
