@@ -14,6 +14,33 @@ Client.askNewPlayer = function () {
 Client.askNewPlayer();
 */
 
+//START OF PHASER INTEGRATION
+
+function iLost() {
+    //CALL THIS FUNCTION WHEN A CLIENT DECIDES IT LOST TO TELL THE OTHER PLAYER THAT THEY WON
+    socket.emit('ilost', Client.name); //tell the server you lost
+}
+
+function sendProtocol(data) {
+    //CALL THIS FUNCTION FROM PHASER TO SEND DATA TO SERVER
+    socket.emit('sendprotocol', data); //send the data to the server
+}
+
+function getProtocol() {
+    //CALL THIS FUNCTION FROM PHASER TO GET DATA FROM SERVER
+    socket.emit('getprotocol', data); //ask the server to send the data
+}
+
+socket.on('youwon', function (data) {
+    //IN HERE CALL THE FUNCTION IN PHASER THAT IS CALLED WHEN YOU WIN
+});
+
+socket.on('recieveprotocol', function (data) {
+    //IN HERE CALL THE FUNCTION IN PHASER THAT RECIEVES THE DATA
+});
+
+//END OF PHASER INTEGRATION 
+
 socket.on('nameagain', function (data) { //skeleton function
     Client.name = prompt("Sorry that name is already online", "also Jeff");
     socket.emit('name set', Client.name); //send the name to the server

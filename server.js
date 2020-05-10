@@ -9,20 +9,19 @@ http.lastID = 0;
 var names = []; //list of all names connected
 var lobbies = []; //list of all lobbies playernumbers
 
-
 function findLobby() {
     lobbyToJoin = -1;
     for (var i = 0; i < lobbies.length; i++) { //loop through all lobbies for lowest number with 1 space
-        if (lobbies[i] == 1) {
+        if (lobbies[i].players == 1) {
             return i;
         }
     }
     for (var i = 0; i < lobbies.length; i++) { //loop through all lobbies for lowest number with 0 space
-        if (lobbies[i] == 0) {
+        if (lobbies[i].players == 0) {
             return i;
         }
     }
-    lobbies.push(0); //create a new lobby
+    lobbies.push({players:0,data:null}); //create a new lobby
     return lobbies.length - 1
 }
 
@@ -52,7 +51,7 @@ io.on('connection', (socket) => {
                 names.push(aname);
                 socket.player.name = aname;
                 var lobbyid = findLobby();
-                lobbies[lobbyid]++;
+                lobbies[lobbyid].players++;
                 socket.player.lobbynumber = lobbyid;
                 socket.join("room"+lobbyid);
                 socket.emit('yourlobby',lobbyid);
@@ -66,11 +65,23 @@ io.on('connection', (socket) => {
             io.in("room" + socket.player.lobbynumber).emit('chat message', msg); //emit the chat message event to everyone
         });
 
+        socket.on('sendprotocol', (msg) => { //store the new gamestate
+            lobbies[socket.player.lobbynumber].data = msg;
+        });
+
+        socket.on('getprotocol', (msg) => { //send the gamestate
+            socket.emit('recieveprotocol', lobbies[socket.player.lobbynumber].data);
+        });
+
+        socket.on('ilost', (msg) => { //when someone says they lost, tell the other person they won
+            socket.to(socket.player.lobbynumber).emit('youwon', 0);
+        });
+
         socket.on('disconnect', function () {
             var index = names.indexOf(socket.player.name);
             if (index > -1) {
                 names.splice(index, 1);
-                lobbies[socket.player.lobbynumber]--
+                lobbies[socket.player.lobbynumber].players--
             }   
             io.in("room" + socket.player.lobbynumber).emit('remove', socket.player.name); //tell everyone in lobby that the player left the lobby
             console.log(socket.player.name+" "+"disconnected");
