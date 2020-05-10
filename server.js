@@ -1,4 +1,5 @@
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').createServer(app); //supply express to an http server
 var io = require('socket.io')(http);
 var port = process.env.PORT || 3000;
@@ -26,6 +27,8 @@ function findLobby() {
 }
 
 //load index.html as homepage
+
+app.use(express.static(__dirname + '/public'));
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
