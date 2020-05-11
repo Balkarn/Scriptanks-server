@@ -5,6 +5,7 @@ Client.ID = 0;
 Client.lobby = -1;
 Client.name = prompt("Please enter your name", "Jeff (xD)");
 socket.emit('name set', Client.name); //send the name to the server
+
 /*
 Client.askNewPlayer = function () {
     console.log("eaewgeaw");
@@ -28,8 +29,13 @@ function sendProtocol(data) {
 
 function getProtocol() {
     //CALL THIS FUNCTION FROM PHASER TO GET DATA FROM SERVER
-    socket.emit('getprotocol', data); //ask the server to send the data
+    socket.emit('getprotocol', 0); //ask the server to send the data
 }
+
+socket.on('gamestart', function (data) {
+    //IN HERE CALL THE FUNCTION IN PHASER THAT IS CALLED WHEN THE GAME STARTS
+    //Data is the map number 1-3
+});
 
 socket.on('youwon', function (data) {
     //IN HERE CALL THE FUNCTION IN PHASER THAT IS CALLED WHEN YOU WIN
@@ -37,6 +43,11 @@ socket.on('youwon', function (data) {
 
 socket.on('recieveprotocol', function (data) {
     //IN HERE CALL THE FUNCTION IN PHASER THAT RECIEVES THE DATA
+});
+
+socket.on('yourplayernumber', function (data) {
+    //IN HERE CALL THE FUNCTION IN PHASER THAT RECORDS WHETHER P1 OR P2
+    //data is the player number
 });
 
 //END OF PHASER INTEGRATION 

@@ -5,6 +5,29 @@ var io = require('socket.io')(http);
 var port = process.env.PORT || 3000;
 //var port = 3000;
 
+var tankTemplate = { 
+    player_id: 0, 
+    x: 0,
+    y: 0,
+    rotation: 0,
+    staff_rotation: 0, 
+    ammo: 0
+}
+
+var bulletTemplate = {
+    id: 0,
+    x: 0,
+    y: 0, 
+    rotation: 0,
+    bounces: 0
+}
+
+var protocolTemplate = {
+    player_id: 0,
+    tanks: [tankTemplate, tankTemplate],
+    bullets: [bulletTemplate, bulletTemplate]
+}
+
 http.lastID = 0;
 var names = []; //list of all names connected
 var lobbies = []; //list of all lobbies playernumbers
@@ -21,7 +44,7 @@ function findLobby() {
             return i;
         }
     }
-    lobbies.push({players:0,data:null}); //create a new lobby
+    lobbies.push({players:0,data:protocolTemplate}); //create a new lobby
     return lobbies.length - 1
 }
 
@@ -39,7 +62,8 @@ io.on('connection', (socket) => {
         socket.player = { //create a record of the new user and their attributes
             id: http.lastID++,
             name: '',
-            lobbynumber: -1
+            lobbynumber: -1,
+            player_id: 0
         }
         socket.emit('allplayers', getAllPlayers()); //send a list of all players to one specific socket, the one who triggered this event
         socket.emit('yourID',socket.player.id); //send the players id back to them
@@ -53,10 +77,16 @@ io.on('connection', (socket) => {
                 var lobbyid = findLobby();
                 lobbies[lobbyid].players++;
                 socket.player.lobbynumber = lobbyid;
+                socket.player.player_id = lobbies[lobbyid].players; //player 1 if first in lobby, player 2 if second in lobby
+                soecket.emit('yourplayernumber',socket.player.player_id);
                 socket.join("room"+lobbyid);
                 socket.emit('yourlobby',lobbyid);
                 console.log("joined lobby"+lobbyid);
                 io.in("room" + socket.player.lobbynumber).emit('newplayer', socket.player); //tell everyone in lobby that the player joined the lobby
+                if (lobbies[socket.player.lobbynumber] == 2) { //if lobby full
+                    var randomMap = Math.floor(Math.random() * (3)) + 1;
+                    io.in("room" + socket.player.lobbynumber).emit('gamestart', randomMap); //tell everyone in lobby that the player joined the lobby
+                }
             }
         });
 
@@ -66,10 +96,23 @@ io.on('connection', (socket) => {
         });
 
         socket.on('sendprotocol', (msg) => { //store the new gamestate
-            lobbies[socket.player.lobbynumber].data = msg;
+            //lobbies[socket.player.lobbynumber].data = msg;
+            var tankid = msg.player_id
+            if (lobbies[socket.player.lobbynumber].data.tanks[0].player_id == tankid) {
+                lobbies[socket.player.lobbynumber].data.tanks[0] = msg.tank_state;
+            } else {
+                lobbies[socket.player.lobbynumber].data.tanks[1] = msg.tank_state;
+            }
+            var bulletid = msg.own_bullets[0].id;
+            if (lobbies[socket.player.lobbynumber].data.bullets[0].id == bulletid) {
+                lobbies[socket.player.lobbynumber].data.bullets[0] = msg.tank_state;
+            } else {
+                lobbies[socket.player.lobbynumber].data.bullets[1] = msg.own_bullets[0];
+            }
         });
 
         socket.on('getprotocol', (msg) => { //send the gamestate
+            lobbies[socket.player.lobbynumber].data.player_id = socket.player.player_id
             socket.emit('recieveprotocol', lobbies[socket.player.lobbynumber].data);
         });
 
